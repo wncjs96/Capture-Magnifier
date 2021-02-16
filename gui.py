@@ -1,14 +1,16 @@
 from tkinter import *
 from pynput import mouse
 from PIL import ImageGrab, ImageTk
+from mss import mss
 from PIL import Image as Img
-import cvSCR as scr
 
 import cv2
-from mss import mss
 import numpy
-
 import threading
+
+import cvSCR as scr
+from sys import exit
+
 
 # GUI
 # state 2 =>
@@ -40,7 +42,7 @@ class App():
 		#title
 		self.root.title('Screen Capture')
 		#ico
-		self.root.iconbitmap('assets/SCR.ico')
+		self.root.iconbitmap('SCR.ico')
 		#preset
 		self.root.attributes('-topmost', True)
 		#geometry
@@ -141,7 +143,7 @@ class App():
 		y = self.delimiter3.winfo_y() + deltay
 		self.delimiter3.geometry(f"+{x}+{y}")
 	def quit_move(self, event):
-		print("Switch set to 1")
+		#print("Switch set to 1")
 		self.switch = 1
 		self.delimiter3.withdraw()
 		if (not self.root.winfo_viewable()):
@@ -152,14 +154,14 @@ class App():
 		
 	
 	def on_click(self, x,y,button,pressed):
-		print('{0} at {1}'.format('Pressed' if pressed else 'Released', (x,y)))
+		#print('{0} at {1}'.format('Pressed' if pressed else 'Released', (x,y)))
 		if pressed:
 			self.left = x
 			self.top = y
 			#self.delimiter.deiconify()
 			#self.delimiter.geometry(f"+{x}+{y}")
 			#self.showBorder()
-			print("x = "+ str(self.left) +" y = "+ str(self.top))
+			#print("x = "+ str(self.left) +" y = "+ str(self.top))
 		else:
 			# Stop listener
 			self.width = x-self.left
@@ -167,7 +169,7 @@ class App():
 			self.size = self.width, self.height
 			#self.bCalibrate['state'] = NORMAL
 			#self.delimiter.geometry(f"{self.width}x{self.height}")
-			print("width = " + str(self.width) + " height = " + str(self.height))		
+			#print("width = " + str(self.width) + " height = " + str(self.height))		
 			self.cap.setVar(self.top,self.left,self.width,self.height)
 			return False
 		
@@ -199,7 +201,7 @@ class App():
 		#title
 		self.delimiter.title('Delimiter')
 		#ico
-		self.delimiter.iconbitmap('assets/SCR.ico')
+		self.delimiter.iconbitmap('SCR.ico')
 		#preset
 		self.delimiter.attributes('-topmost', True)
 		#geometry
@@ -241,10 +243,9 @@ class App():
 		self.switch = 0
 		if (not self.delimiter3.winfo_viewable()):
 			self.delimiter3.deiconify()
-			print("if case 2: switch is " + str(self.switch))
+			#print("if case 2: switch is " + str(self.switch))
 
 			while(self.switch < 1):
-				#print(self.switch)
 				sct_img = self.sct.grab({'top':self.top,'left':self.left,'width':self.width,'height':self.height})
 				img = numpy.array(sct_img)
 				b,g,r,p = cv2.split(img)
@@ -272,17 +273,15 @@ class App():
 		else:
 			self.switch = 1
 			self.delimiter3.withdraw()	
-			print("if case 1: switch is " + str(self.switch))
+			#print("if case 1: switch is " + str(self.switch))
 
 	def resizeWheel(self,event):
 		# This is not cross-platform. For Windows only.
 		if (event.delta < 0):
-			#print('wheel down detected')
 			# wheel down
 			self.size = tuple(map((lambda i,j: i - j if i > 100 else i), self.size, (100,100)))
 		if (event.delta > 0):
 			# wheel up
-			#print('wheel up detected')
 			self.size = tuple(map(lambda i,j: i + j if i < self.root.winfo_screenwidth() else i, self.size, (100,100)))
 		
 		
@@ -290,7 +289,7 @@ class App():
 		self.left = event.x
 		self.top = event.y
 		self.fullCanvas.coords(rect,event.x,event.y, event.x, event.y)
-		print("x = "+ str(self.left) +" y = "+ str(self.top))
+		#print("x = "+ str(self.left) +" y = "+ str(self.top))
 
 	def getWidthHeight(self, event):
 		# Stop listener
@@ -306,7 +305,7 @@ class App():
 			self.top = self.height*-1
 			self.height = temp
 		#self.delimiter.geometry(f"{self.width}x{self.height}")
-		print("left = " +str(self.left)+" top = "+str(self.top) +" width = " + str(self.width) + " height = " + str(self.height))
+		#print("left = " +str(self.left)+" top = "+str(self.top) +" width = " + str(self.width) + " height = " + str(self.height))
 		self.delimiter2.quit()
 		self.size = self.width, self.height
 		self.cap.setVar(self.top, self.left, self.width, self.height)
@@ -358,13 +357,10 @@ class App():
 		scrThread.start()
 
 		self.counter = self.counter + 1
-		print("name : "+ name + " Counter : " + str(self.counter))
+		#print("name : "+ name + " Counter : " + str(self.counter))
 		
 		#TODO : multi screens for capturing
 		#solution : use classes for each monitors
-
-	def test(self):
-		print("key pressed detected")
 	
 	def thread_function(name):
 		logging.info("Thread %s: starting", name)
@@ -376,11 +372,9 @@ class App():
 #	def getPos(self,event):
 #		self.left = event.x
 #		self.top = event.y
-#		print("x = "+ str(self.left) +" y = "+ str(self.top))
 #	def getPos2(self,event):
 #		self.width = event.x-self.left
 #		self.height = event.y-self.top
-#		print("width = " + str(self.width) + "height = " + str(self.height))
 
 
 def main():

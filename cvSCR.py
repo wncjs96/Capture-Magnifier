@@ -5,7 +5,7 @@ from PIL import Image
 # There's no native way of handling the feature of getting the window "always on top"
 # It's OS dependent forcing it to not be cross platform
 # -> this is a windows way of handling things. Marked with TODOs
-import os 
+#import os 
 
 # signals and signal handlers for garbage collection -> obsolete as there's an easier solution with a shared variable
 # import signal
@@ -27,7 +27,7 @@ class SCR():
 		self.bounding_box={'top':top,'left':left,'width':width,'height':height}	
 	def run(self, name):
 		if (self.arr[int(name[6])] == 0):
-			print(name[6] + "\'th bucket got filled up !")
+			#print(name[6] + "\'th bucket got filled up !")
 			self.arr[int(name[6])] = 1
 			while (self.arr[int(name[6])] == 1):
 				sct_img = self.sct.grab(self.bounding_box)
@@ -45,10 +45,8 @@ class SCR():
 		if event == cv2.EVENT_RBUTTONDOWN:
 			self.arr[int(param)]=0
 			cv2.destroyWindow('screen'+param)
-			print("destroyed screen" + param)
+			#print("destroyed screen" + param)
 
-	def demolish(self):
-		cv2.destroyAllWindows()
 	
 	
 	
