@@ -7,12 +7,12 @@ The users can decide a part of the screen that's going to be captured and render
 This project recommends Python 3.7 or higher.
 
 ## Prerequisites:
-Tkinter: pip install tkinter
-Pillow: python -m pip install --upgrade Pillow
-mss: python -m pip install -U --user mss
-numpy: python -m pip install --upgrade numpy
-opencv: python -m pip install --upgrade opencv-python
-pynput: python -m pip install --upgrade pynput
+Tkinter: pip install tkinter  
+Pillow: python -m pip install --upgrade Pillow  
+mss: python -m pip install -U --user mss  
+numpy: python -m pip install --upgrade numpy  
+opencv: python -m pip install --upgrade opencv-python  
+pynput: python -m pip install --upgrade pynput  
 
 ## Work
 
