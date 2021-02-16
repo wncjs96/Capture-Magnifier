@@ -257,7 +257,6 @@ class App():
 				if (self.temp != None and self.temp.winfo_exists()):
 					self.temp.destroy()
 				self.temp = Label(self.delimiter3, image=imgtk)
-
 				
 				self.temp.pack()
 	
@@ -279,10 +278,10 @@ class App():
 		# This is not cross-platform. For Windows only.
 		if (event.delta < 0):
 			# wheel down
-			self.size = tuple(map((lambda i,j: i - j if i > 100 else i), self.size, (100,100)))
+			self.size = tuple(map((lambda i,j: i - j if i > 100 else i), self.size, (30,30)))
 		if (event.delta > 0):
 			# wheel up
-			self.size = tuple(map(lambda i,j: i + j if i < self.root.winfo_screenwidth() else i, self.size, (100,100)))
+			self.size = tuple(map(lambda i,j: i + j if i < self.root.winfo_screenwidth() else i, self.size, (30,30)))
 		
 		
 	def getLeftTop(self, event, rect):
