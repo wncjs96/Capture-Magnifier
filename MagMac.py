@@ -21,8 +21,10 @@ class LoadImage:
 
 	def zoomer(self,event):
 		if (event.delta > 0):
+			print('mouse wheel up')
 			if self.zoomcycle != 4: self.zoomcycle += 1
 		elif (event.delta < 0):
+			print('mouse wheel down')
 			if self.zoomcycle != 0: self.zoomcycle -= 1
 		self.crop(event)
 

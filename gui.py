@@ -1,13 +1,14 @@
 from tkinter import *
 from pynput import mouse
 from PIL import ImageGrab, ImageTk
+from PIL import Image as Img
 import cvSCR as scr
 
-#TODO: remove time (only for debugging)
-import time
+import cv2
+from mss import mss
+import numpy
 
 import threading
-import logging
 
 # GUI
 # state 2 =>
@@ -28,6 +29,10 @@ class App():
 	boolBorder = False
 	cap = scr.SCR()
 	counter = 0
+	switch = 0
+	sct = mss()
+	temp = None
+	size = width, height
 	# initializer, constructor
 	def __init__(self):
 		self.root = Tk()
@@ -49,16 +54,18 @@ class App():
 		self.grip.bind("<ButtonPress-1>", self.start_move)
 		self.grip.bind("<ButtonRelease-1>", self.stop_move)
 		self.grip.bind("<B1-Motion>", self.do_move)
+		self.grip.bind("<ButtonPress-3>", self.hide_ui)
 		
 		self.frame = Frame(self.root, width=480, height=850, borderwidth=10, relief=RAISED)
 		self.frame.configure(background='#1b2940')
 		self.frame.pack_propagate(False)
 		self.frame.pack()
 		#Calibration to set up the bounding box for screen capturing
-		self.bCalibrate = Button(self.frame, text="CALIBRATE", command=self.calibrate)
+		self.bCalibrate = Button(self.frame, text="Calibrate", command=self.calibrate)
 		self.bBetterCalibrate = Button(self.frame, text="Better Calibrate", command=self.makeNewCanvas)
 		self.bShowBorder = Button(self.frame, text="Show Area", command=self.showBorder)
 		self.bShowSCR = Button(self.frame, text="Show Capture", command=self.showSCR)
+		self.bMakeSCR = Button(self.frame, text="Better Capture", command=self.makeNewScreen)
 		self.bQuit = Button(self.frame, text="QUIT", command=self.quitroot)
 		
 		# keybinds for hotkeys
@@ -66,19 +73,25 @@ class App():
 		self.root.bind("<Key-Delete>", lambda x: self.showSCR())
 
 		self.bCalibrate.grid(row=0, column=0)
-		self.bShowBorder.grid(row=0, column=1)
-		self.bBetterCalibrate.grid(row=0, column=2)
+		self.bBetterCalibrate.grid(row=0, column=1)
+		self.bShowBorder.grid(row=0, column=2)
 		self.bShowSCR.grid(row=0, column=3)
-		self.bQuit.grid(row=0, column=4)
+		self.bMakeSCR.grid(row=0, column=4)
+		self.bQuit.grid(row=0, column=5)
 
 		# explanation of each button (Label area)
 		
 		#self.tCalibrate = Label(self.frame, text="")
 		self.tBetterCalibrate = Label(self.frame, text="BetterCalibrate has a fewer bugs but only works on the primary monitor for this version.", relief=RAISED)
 		#self.tCalibrate.grid(row=1, column=0, columnspan=4)
-		self.tShowCapture = Label(self.frame, text="DEL, Q for Show Capture")
-		self.tBetterCalibrate.grid(row=2, column=0, columnspan=5)
-		self.tShowCapture.grid(row=3, column=0, columnspan=5)
+		self.tShowCapture = Label(self.frame, text="Right click on screen to close the capturing screen")
+		self.tBetterCapture = Label(self.frame, text="Right click on border to close the BETTER capturing screen")
+		self.tSteps = Label(self.frame, text="Calibrate/BetterCalibrate -> ShowCapture/BetterCapture")
+		self.tSize = Label(self.frame, text="BetterCapture: Wheel up or down on border to resize")
+		self.tSteps.grid(row=2, column=0, columnspan=6)
+		self.tBetterCalibrate.grid(row=3, column=0, columnspan=6)
+		self.tShowCapture.grid(row=4, column=0, columnspan=6)
+		self.tBetterCapture.grid(row=5, column=0, columnspan=6)
 		
 		# Clock for elapsed time (TODO: to be more sophisticated later)
 		
@@ -86,6 +99,22 @@ class App():
 		# There's an actual window hiding later used for calibration
 		self.makeNewFrame(self.top, self.left, self.width, self.height)
 		self.delimiter.withdraw()
+		
+		self.delimiter3=Toplevel()
+		self.delimiter3.attributes('-topmost', True)
+		self.delimiter3.overrideredirect(1)
+		self.delimiter3.geometry(f"+{self.left}+{self.top}")	
+		self.delimiter3.withdraw()
+	
+		#drag and move
+		self.grip2 = Label(self.delimiter3, bitmap="gray25",bg='#282a2e')	
+		self.grip2.pack(side="top", fill="both")
+		self.grip2.bind("<ButtonPress-1>", self.start_move2)
+		self.grip2.bind("<ButtonRelease-1>", self.stop_move2)
+		self.grip2.bind("<B1-Motion>", self.do_move2)
+		self.grip2.bind("<ButtonPress-3>", self.quit_move)
+		# Wheel to resize
+		self.grip2.bind("<MouseWheel>", self.resizeWheel)	
 	# instance methods
 	def start_move(self, event):
 		self.root.x = event.x
@@ -99,6 +128,28 @@ class App():
 		x = self.root.winfo_x() + deltax
 		y = self.root.winfo_y() + deltay
 		self.root.geometry(f"+{x}+{y}")
+	def start_move2(self, event):
+		self.delimiter3.x = event.x
+		self.delimiter3.y = event.y
+	def stop_move2(self, event):
+		self.delimiter3.x = None
+		self.delimiter3.y = None
+	def do_move2(self, event):
+		deltax = event.x - self.delimiter3.x
+		deltay = event.y - self.delimiter3.y
+		x = self.delimiter3.winfo_x() + deltax
+		y = self.delimiter3.winfo_y() + deltay
+		self.delimiter3.geometry(f"+{x}+{y}")
+	def quit_move(self, event):
+		print("Switch set to 1")
+		self.switch = 1
+		self.delimiter3.withdraw()
+		if (not self.root.winfo_viewable()):
+			self.root.deiconify()
+	def hide_ui(self, event):
+		if (self.delimiter3.winfo_viewable()):
+			self.root.withdraw()
+		
 	
 	def on_click(self, x,y,button,pressed):
 		print('{0} at {1}'.format('Pressed' if pressed else 'Released', (x,y)))
@@ -113,6 +164,7 @@ class App():
 			# Stop listener
 			self.width = x-self.left
 			self.height = y-self.top
+			self.size = self.width, self.height
 			#self.bCalibrate['state'] = NORMAL
 			#self.delimiter.geometry(f"{self.width}x{self.height}")
 			print("width = " + str(self.width) + " height = " + str(self.height))		
@@ -185,6 +237,55 @@ class App():
 		self.delimiter2.mainloop()
 		self.delimiter2.destroy()
 
+	def makeNewScreen(self):
+		self.switch = 0
+		if (not self.delimiter3.winfo_viewable()):
+			self.delimiter3.deiconify()
+			print("if case 2: switch is " + str(self.switch))
+
+			while(self.switch < 1):
+				#print(self.switch)
+				sct_img = self.sct.grab({'top':self.top,'left':self.left,'width':self.width,'height':self.height})
+				img = numpy.array(sct_img)
+				b,g,r,p = cv2.split(img)
+				
+				img = cv2.merge((r,g,b))
+				
+				im = Img.fromarray(img)
+				imgtk = ImageTk.PhotoImage(im.resize(self.size))
+				if (self.temp != None and self.temp.winfo_exists()):
+					self.temp.destroy()
+				self.temp = Label(self.delimiter3, image=imgtk)
+
+				
+				self.temp.pack()
+	
+				# NOT a CV screen, so can't use cv wait key
+				#if(cv2.waitKey(1) & 0xFF) == ord('q'):
+				#	print('Q is pressed, now delimiter3 will be off')
+				#	#self.arr[int(name[6])] = 0
+				#	self.delimiter3.quit()
+				#	break
+			
+			
+				self.delimiter3.update()
+		else:
+			self.switch = 1
+			self.delimiter3.withdraw()	
+			print("if case 1: switch is " + str(self.switch))
+
+	def resizeWheel(self,event):
+		# This is not cross-platform. For Windows only.
+		if (event.delta < 0):
+			#print('wheel down detected')
+			# wheel down
+			self.size = tuple(map((lambda i,j: i - j if i > 100 else i), self.size, (100,100)))
+		if (event.delta > 0):
+			# wheel up
+			#print('wheel up detected')
+			self.size = tuple(map(lambda i,j: i + j if i < self.root.winfo_screenwidth() else i, self.size, (100,100)))
+		
+		
 	def getLeftTop(self, event, rect):
 		self.left = event.x
 		self.top = event.y
@@ -207,6 +308,7 @@ class App():
 		#self.delimiter.geometry(f"{self.width}x{self.height}")
 		print("left = " +str(self.left)+" top = "+str(self.top) +" width = " + str(self.width) + " height = " + str(self.height))
 		self.delimiter2.quit()
+		self.size = self.width, self.height
 		self.cap.setVar(self.top, self.left, self.width, self.height)
 
 	def renderRect(self, event, rect, canvasImage,capture):
@@ -236,7 +338,7 @@ class App():
 	
 	def quitroot(self):
 		# TODO: end the threads (range screen 1..4)
-		self.cap.demolish()	
+		#self.cap.demolish()	
 		# quit and destroy
 		self.root.quit()
 		# destroy for garbage collection and remove dependencies

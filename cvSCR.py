@@ -18,7 +18,6 @@ class SCR():
 	# class var
 	arr = [0] * 4
 	bounding_box = {'top': 0, 'left': 0, 'width': 1000, 'height': 1000}
-	
 	# To keep up with the active monitors, array elements are used as placeholders for each active screen
 
 
@@ -30,33 +29,24 @@ class SCR():
 		if (self.arr[int(name[6])] == 0):
 			print(name[6] + "\'th bucket got filled up !")
 			self.arr[int(name[6])] = 1
-			while True:
+			while (self.arr[int(name[6])] == 1):
 				sct_img = self.sct.grab(self.bounding_box)
 	
 				cv2.namedWindow(name, cv2.WINDOW_NORMAL|cv2.WINDOW_KEEPRATIO)
+				cv2.setMouseCallback(name, self.callback_func, param=name[6])
 				
-				#TODO: resizing upon wheel input
-				#TODO: fix for cross-platform
-				#os.system('''/usr/bin/osascript -e 'tell app "finder" to set frontmost of process "python" to true' ''') 
-				
-
-				# set the window FULL SCREEN then back to NORMAL - might be cross platform
-			
-			#	cv2.waitKey(1)
-			#	
-			#	cv2.setWindowProperty(name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-			#	cv2.setWindowProperty(name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_NORMAL)
-	
-				#cv2.resizeWindow('screen', 600,600)
 				cv2.imshow(name, np.array(sct_img))
 				
-				#time.sleep(1)
-	
-				if (cv2.waitKey(1) & 0xFF) == ord('q'):
+				if (cv2.waitKey(1) & 0xFF) == ord('p'):
 					self.arr[int(name[6])] = 0
-					cv2.destroyAllWindows()
-					break
-					
+					cv2.destroyWindow(name)
+
+	def callback_func(self, event, x,y,flags,param):
+		if event == cv2.EVENT_RBUTTONDOWN:
+			self.arr[int(param)]=0
+			cv2.destroyWindow('screen'+param)
+			print("destroyed screen" + param)
+
 	def demolish(self):
 		cv2.destroyAllWindows()
 	
