@@ -23,4 +23,3 @@ The whole thing is wrapped by tkinter, the graphical interface. Pynput is used t
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
->>>>>>> c65484d936303942f69adeb232fa27929c658ed6
